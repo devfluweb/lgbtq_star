@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spectrum Analyzer</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
         :root {
@@ -18,6 +18,7 @@
             --accent-magenta: #ff00c8;
             --accent-violet: #9d4dff;
             --accent-green: #00ff88;
+            --accent-yellow: #ffcc00;
             --rainbow-gradient: linear-gradient(90deg, #ff0000, #ff8000, #ffff00, #80ff00, #00ff80, #00ffff, #0080ff, #8000ff, #ff00ff);
         }
 
@@ -70,13 +71,14 @@
 
         h1 {
             font-size: 3rem;
-            font-weight: 700;
+            font-weight: 800;
             margin-bottom: 15px;
             background: var(--rainbow-gradient);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+            letter-spacing: 1px;
         }
 
         h2 {
@@ -126,7 +128,7 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 50%;
+            width: 20%;
             height: 100%;
         }
 
@@ -134,7 +136,7 @@
             position: absolute;
             top: 0;
             right: 0;
-            width: 50%;
+            width: 80%;
             height: 100%;
         }
 
@@ -215,7 +217,7 @@
 
         .result-title {
             font-size: 2.5rem;
-            font-weight: 600;
+            font-weight: 700;
             margin: 20px 0;
             padding: 15px;
             border-radius: 15px;
@@ -426,9 +428,6 @@
 
         .particle {
             position: absolute;
-            width: 4px;
-            height: 4px;
-            background: var(--accent-cyan);
             border-radius: 50%;
             opacity: 0.5;
             animation: float 15s infinite linear;
@@ -467,6 +466,23 @@
             50% {
                 transform: translateY(-20px) rotate(180deg);
             }
+        }
+
+        /* Glitter effect */
+        .glitter {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0;
+            animation: glitter 3s infinite;
+        }
+
+        @keyframes glitter {
+            0% { opacity: 0; transform: scale(0); }
+            50% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0); }
         }
 
         @media (max-width: 768px) {
@@ -539,6 +555,10 @@
     <div class="floating-emoji" style="top: 20%; right: 10%;">✨</div>
     <div class="floating-emoji" style="bottom: 30%; left: 15%;">🎉</div>
     <div class="floating-emoji" style="bottom: 10%; right: 5%;">🌟</div>
+    <div class="floating-emoji" style="top: 40%; left: 2%;">💫</div>
+    <div class="floating-emoji" style="top: 60%; right: 2%;">🦄</div>
+    <div class="floating-emoji" style="top: 15%; left: 50%;">⭐</div>
+    <div class="floating-emoji" style="bottom: 20%; right: 15%;">🔥</div>
     
     <div class="container">
         <div class="glass-card fade-in" id="heroSection">
@@ -655,15 +675,38 @@
 
         // Create floating particles
         function createParticles() {
-            for (let i = 0; i < 50; i++) {
+            for (let i = 0; i < 100; i++) {
                 const particle = document.createElement('div');
                 particle.classList.add('particle');
                 particle.style.left = Math.random() * 100 + 'vw';
                 particle.style.animationDelay = Math.random() * 15 + 's';
                 particle.style.animationDuration = (15 + Math.random() * 10) + 's';
-                particle.style.background = i % 3 === 0 ? 'var(--accent-cyan)' : 
-                                          i % 3 === 1 ? 'var(--accent-magenta)' : 'var(--accent-violet)';
+                
+                // Random size and shape
+                const size = Math.random() * 8 + 2;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                
+                // Random shape (circle or square)
+                if (Math.random() > 0.7) {
+                    particle.style.borderRadius = '0';
+                }
+                
+                // Random color
+                const colors = ['var(--accent-cyan)', 'var(--accent-magenta)', 'var(--accent-violet)', 'var(--accent-green)', 'var(--accent-yellow)', '#ffffff'];
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                
                 particlesContainer.appendChild(particle);
+            }
+            
+            // Add glitter effects
+            for (let i = 0; i < 30; i++) {
+                const glitter = document.createElement('div');
+                glitter.classList.add('glitter');
+                glitter.style.left = Math.random() * 100 + 'vw';
+                glitter.style.top = Math.random() * 100 + 'vh';
+                glitter.style.animationDelay = Math.random() * 5 + 's';
+                document.body.appendChild(glitter);
             }
         }
 
@@ -673,8 +716,8 @@
         uploadArea.addEventListener('dragover', handleDragOver);
         uploadArea.addEventListener('drop', handleDrop);
         fileInput.addEventListener('change', handleFileSelect);
-        startButton.addEventListener('click', () => startAnalysis(true));
-        analysisButton.addEventListener('click', () => startAnalysis(false));
+        startButton.addEventListener('click', () => startAnalysis(false)); // 20% left - not LGBTQ+
+        analysisButton.addEventListener('click', () => startAnalysis(true)); // 80% right - LGBTQ+
         tryAgainBtn.addEventListener('click', resetApp);
         downloadCertificateBtn.addEventListener('click', downloadCertificate);
         shareResultBtn.addEventListener('click', shareResult);
@@ -772,25 +815,35 @@
             ];
             
             const funnyLines = [
-                "Detecting rainbows in your aura...",
-                "Checking for glitter residue...",
-                "Analyzing your taste in music...",
-                "Scanning for pride flag colors...",
-                "Measuring your fabulousness level...",
-                "Calculating your queer potential...",
-                "Assessing your knowledge of LGBTQ+ history...",
-                "Checking if you own a rainbow accessory...",
-                "Analyzing your Netflix watch history...",
-                "Measuring your allyship energy...",
-                "Scanning for knowledge of queer terminology...",
-                "Checking if you've ever been to a Pride parade...",
-                "Analyzing your preferred pronouns...",
-                "Detecting if you know what 'cishet' means...",
-                "Measuring your ability to slay...",
-                "Scanning for hidden rainbow potential...",
-                "Analyzing your dance moves...",
-                "Checking your knowledge of RuPaul's Drag Race...",
-                "Measuring your tolerance for bad puns..."
+                "Detecting rainbows in your aura... 🌈",
+                "Checking for glitter residue... ✨",
+                "Analyzing your taste in music... 🎵",
+                "Scanning for pride flag colors... 🏳️‍🌈",
+                "Measuring your fabulousness level... 💃",
+                "Calculating your queer potential... 📊",
+                "Assessing your knowledge of LGBTQ+ history... 📚",
+                "Checking if you own a rainbow accessory... 🌈",
+                "Analyzing your Netflix watch history... 📺",
+                "Measuring your allyship energy... ⚡",
+                "Scanning for knowledge of queer terminology... 📖",
+                "Checking if you've ever been to a Pride parade... 🎉",
+                "Analyzing your preferred pronouns... 💬",
+                "Detecting if you know what 'cishet' means... 🤔",
+                "Measuring your ability to slay... 👑",
+                "Scanning for hidden rainbow potential... 🔍",
+                "Analyzing your dance moves... 💃",
+                "Checking your knowledge of RuPaul's Drag Race... 👠",
+                "Measuring your tolerance for bad puns... 😂",
+                "Assessing your collection of colorful socks... 🧦",
+                "Scanning for knowledge of LGBTQ+ icons... 👑",
+                "Analyzing your social media follows... 📱",
+                "Checking if you can name all the colors of the rainbow... 🎨",
+                "Measuring your ability to accessorize with flair... 💎",
+                "Detecting if you've ever worn something sparkly unironically... ✨",
+                "Analyzing your karaoke song choices... 🎤",
+                "Checking for knowledge of queer pop culture references... 🎬",
+                "Measuring your sass levels... 💁‍♀️",
+                "Scanning for evidence of having too much fun... 🥳"
             ];
             
             let currentStep = 0;
@@ -803,7 +856,7 @@
                     progressFill.style.width = `${step.progress}%`;
                     
                     // Random funny line sometimes
-                    if (Math.random() > 0.7) {
+                    if (Math.random() > 0.5) {
                         progressSubtext.textContent = funnyLines[Math.floor(Math.random() * funnyLines.length)];
                     }
                     
@@ -829,7 +882,7 @@
                 : Math.floor(Math.random() * 20) + 10; // 10-29%
             
             if (isLGBTQResult) {
-                resultTitle.innerHTML = '🌈 <span class="result-lgbtq">LGBTQ+ List Member Detected!</span>';
+                resultTitle.innerHTML = '🌈 <span class="result-lgbtq">Belongs to LGBTQ+ Community!</span>';
                 
                 // Create confetti effect
                 confetti({
@@ -856,7 +909,7 @@
                     </ul>
                 `;
             } else {
-                resultTitle.innerHTML = '🙂 <span class="result-not-lgbtq">Not in the LGBTQ+ List</span>';
+                resultTitle.innerHTML = '🙂 <span class="result-not-lgbtq">Does not belong to LGBTQ+ Community</span>';
                 
                 // Add non-LGBTQ details
                 resultDetails.innerHTML = `
@@ -882,33 +935,11 @@
             // Draw background based on result
             if (isLGBTQResult) {
                 // Rainbow gradient background for LGBTQ+ result
-                const gradient = ctx.createLinearGradient(0, 0, resultCanvas.width, resultCanvas.height);
-                gradient.addColorStop(0, 'rgba(255, 0, 0, 0.1)');
-                gradient.addColorStop(0.125, 'rgba(255, 128, 0, 0.1)');
-                gradient.addColorStop(0.25, 'rgba(255, 255, 0, 0.1)');
-                gradient.addColorStop(0.375, 'rgba(128, 255, 0, 0.1)');
-                gradient.addColorStop(0.5, 'rgba(0, 255, 128, 0.1)');
-                gradient.addColorStop(0.625, 'rgba(0, 255, 255, 0.1)');
-                gradient.addColorStop(0.75, 'rgba(0, 128, 255, 0.1)');
-                gradient.addColorStop(0.875, 'rgba(128, 0, 255, 0.1)');
-                gradient.addColorStop(1, 'rgba(255, 0, 255, 0.1)');
-                
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, resultCanvas.width, resultCanvas.height);
+                drawRainbowCertificate(ctx);
             } else {
-                // Standard gradient background for non-LGBTQ result
-                const gradient = ctx.createLinearGradient(0, 0, resultCanvas.width, resultCanvas.height);
-                gradient.addColorStop(0, 'rgba(0, 240, 255, 0.2)');
-                gradient.addColorStop(1, 'rgba(157, 77, 255, 0.2)');
-                
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, resultCanvas.width, resultCanvas.height);
+                // Dark background for non-LGBTQ result
+                drawDarkCertificate(ctx);
             }
-            
-            // Draw border
-            ctx.strokeStyle = isLGBTQResult ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.3)';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(10, 10, resultCanvas.width - 20, resultCanvas.height - 20);
             
             // Draw user photo if available
             if (imagePreview.src) {
@@ -917,7 +948,7 @@
                     // Draw image in a circular frame
                     ctx.save();
                     ctx.beginPath();
-                    ctx.arc(resultCanvas.width / 2, 150, 80, 0, Math.PI * 2);
+                    ctx.arc(resultCanvas.width / 2, 180, 80, 0, Math.PI * 2);
                     ctx.closePath();
                     ctx.clip();
                     
@@ -933,7 +964,7 @@
                         drawWidth = 160 * aspectRatio;
                     }
                     
-                    ctx.drawImage(img, resultCanvas.width / 2 - drawWidth/2, 150 - drawHeight/2, drawWidth, drawHeight);
+                    ctx.drawImage(img, resultCanvas.width / 2 - drawWidth/2, 180 - drawHeight/2, drawWidth, drawHeight);
                     ctx.restore();
                     
                     // Draw the rest of the certificate
@@ -945,43 +976,130 @@
             }
         }
 
+        function drawRainbowCertificate(ctx) {
+            // Draw rainbow gradient background
+            const gradient = ctx.createLinearGradient(0, 0, resultCanvas.width, resultCanvas.height);
+            gradient.addColorStop(0, 'rgba(255, 0, 0, 0.1)');
+            gradient.addColorStop(0.125, 'rgba(255, 128, 0, 0.1)');
+            gradient.addColorStop(0.25, 'rgba(255, 255, 0, 0.1)');
+            gradient.addColorStop(0.375, 'rgba(128, 255, 0, 0.1)');
+            gradient.addColorStop(0.5, 'rgba(0, 255, 128, 0.1)');
+            gradient.addColorStop(0.625, 'rgba(0, 255, 255, 0.1)');
+            gradient.addColorStop(0.75, 'rgba(0, 128, 255, 0.1)');
+            gradient.addColorStop(0.875, 'rgba(128, 0, 255, 0.1)');
+            gradient.addColorStop(1, 'rgba(255, 0, 255, 0.1)');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, resultCanvas.width, resultCanvas.height);
+            
+            // Draw rainbow border
+            const rainbowColors = ['#ff0000', '#ff8000', '#ffff00', '#80ff00', '#00ff80', '#00ffff', '#0080ff', '#8000ff'];
+            const borderWidth = 15;
+            
+            for (let i = 0; i < rainbowColors.length; i++) {
+                ctx.strokeStyle = rainbowColors[i];
+                ctx.lineWidth = borderWidth;
+                ctx.strokeRect(
+                    borderWidth/2 + i*2, 
+                    borderWidth/2 + i*2, 
+                    resultCanvas.width - borderWidth - i*4, 
+                    resultCanvas.height - borderWidth - i*4
+                );
+            }
+            
+            // Add decorative elements
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            for (let i = 0; i < 50; i++) {
+                const x = Math.random() * resultCanvas.width;
+                const y = Math.random() * resultCanvas.height;
+                const size = Math.random() * 5 + 1;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function drawDarkCertificate(ctx) {
+            // Draw dark gradient background
+            const gradient = ctx.createLinearGradient(0, 0, resultCanvas.width, resultCanvas.height);
+            gradient.addColorStop(0, 'rgba(10, 10, 20, 0.9)');
+            gradient.addColorStop(1, 'rgba(30, 10, 40, 0.9)');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, resultCanvas.width, resultCanvas.height);
+            
+            // Draw subtle border
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 5;
+            ctx.strokeRect(10, 10, resultCanvas.width - 20, resultCanvas.height - 20);
+            
+            // Add subtle decorative elements
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+            for (let i = 0; i < 30; i++) {
+                const x = Math.random() * resultCanvas.width;
+                const y = Math.random() * resultCanvas.height;
+                const size = Math.random() * 3 + 1;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
         function drawCertificateText(ctx, isLGBTQ, lgbtqPercentage) {
-            // Draw title
+            // Draw title with shadow
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+            
             ctx.fillStyle = 'white';
             ctx.font = 'bold 36px Poppins';
             ctx.textAlign = 'center';
-            ctx.fillText('SPECTRUM ANALYSIS CERTIFICATE', resultCanvas.width / 2, 280);
+            ctx.fillText('SPECTRUM ANALYSIS CERTIFICATE', resultCanvas.width / 2, 100);
             
             // Draw user details
             ctx.font = '22px Poppins';
-            ctx.fillText(`Name: ${userData.name}`, resultCanvas.width / 2, 330);
+            ctx.fillText(`Name: ${userData.name}`, resultCanvas.width / 2, 320);
             
             // Format date of birth
             const dob = new Date(userData.dob);
             const formattedDOB = dob.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-            ctx.fillText(`Date of Birth: ${formattedDOB}`, resultCanvas.width / 2, 370);
+            ctx.fillText(`Date of Birth: ${formattedDOB}`, resultCanvas.width / 2, 360);
             
             // Draw result
             ctx.font = 'bold 28px Poppins';
-            ctx.fillText(isLGBTQ ? 'LGBTQ+ LIST MEMBER' : 'NOT IN LGBTQ+ LIST', resultCanvas.width / 2, 430);
+            ctx.fillText(isLGBTQ ? 'Belongs to LGBTQ+ Community' : 'Does not belong to LGBTQ+ Community', resultCanvas.width / 2, 420);
             
             ctx.font = '24px Poppins';
             ctx.fillText(`Match Percentage: ${lgbtqPercentage}%`, resultCanvas.width / 2, 470);
             
             ctx.font = '18px Poppins';
-        
-            ctx.fillText(new Date().toLocaleDateString(), resultCanvas.width / 2, 550);
+            ctx.fillText(new Date().toLocaleDateString(), resultCanvas.width / 2, 520);
             
-            // Draw rainbow if LGBTQ+
+            // Remove shadow for other elements
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            
+            // Draw decorative elements at the bottom
             if (isLGBTQ) {
                 const rainbowColors = ['#ff0000', '#ff8000', '#ffff00', '#80ff00', '#00ff80', '#00ffff', '#0080ff', '#8000ff'];
                 const barHeight = 10;
-                const startY = 570;
+                const startY = 550;
                 
                 for (let i = 0; i < rainbowColors.length; i++) {
                     ctx.fillStyle = rainbowColors[i];
                     ctx.fillRect(100, startY + i * barHeight, resultCanvas.width - 200, barHeight);
                 }
+            } else {
+                // Simple line for non-LGBTQ certificate
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(150, 560);
+                ctx.lineTo(resultCanvas.width - 150, 560);
+                ctx.stroke();
             }
         }
 
@@ -1034,10 +1152,10 @@
                 ctx.fillStyle = gradient;
                 ctx.fillRect(0, 0, shareCanvas.width, shareCanvas.height);
             } else {
-                // Standard gradient background for non-LGBTQ result
+                // Dark background for non-LGBTQ result
                 const gradient = ctx.createLinearGradient(0, 0, shareCanvas.width, shareCanvas.height);
-                gradient.addColorStop(0, 'rgba(0, 240, 255, 0.4)');
-                gradient.addColorStop(1, 'rgba(157, 77, 255, 0.4)');
+                gradient.addColorStop(0, 'rgba(10, 10, 20, 0.9)');
+                gradient.addColorStop(1, 'rgba(30, 10, 40, 0.9)');
                 
                 ctx.fillStyle = gradient;
                 ctx.fillRect(0, 0, shareCanvas.width, shareCanvas.height);
@@ -1056,7 +1174,7 @@
             
             // Draw result
             ctx.font = 'bold 48px Poppins';
-            ctx.fillText(isLGBTQResult ? '🌈 LGBTQ+ LIST MEMBER' : '🙂 NOT IN LGBTQ+ LIST', shareCanvas.width / 2, 300);
+            ctx.fillText(isLGBTQResult ? '🌈 Belongs to LGBTQ+ Community' : '🙂 Does not belong to LGBTQ+ Community', shareCanvas.width / 2, 300);
             
             // Draw user info
             ctx.font = '36px Poppins';
@@ -1064,7 +1182,7 @@
             
             // Draw analysis info
             ctx.font = '28px Poppins';
-            ctx.fillText(`Analysis #${analysisCount} • ${new Date().toLocaleDateString()}`, shareCanvas.width / 2, 500);
+            ctx.fillText(`${new Date().toLocaleDateString()}`, shareCanvas.width / 2, 500);
             
             // Draw website info
             ctx.font = '24px Poppins';
@@ -1082,8 +1200,8 @@
                         navigator.share({
                             title: 'My Spectrum Analysis Result',
                             text: isLGBTQResult 
-                                ? "🌈 I'm officially a LGBTQ+ List Member according to the Spectrum Analyzer!" 
-                                : "🙂 The Spectrum Analyzer says I'm not in the LGBTQ+ List.",
+                                ? "🌈 I belong to the LGBTQ+ Community according to the Spectrum Analyzer!" 
+                                : "🙂 The Spectrum Analyzer says I don't belong to the LGBTQ+ Community.",
                             files: [file]
                         });
                     });
