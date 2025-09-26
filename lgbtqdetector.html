@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spectrum Analyzer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0a0a14;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --accent-cyan: #00f0ff;
+            --accent-magenta: #ff00c8;
+            --accent-violet: #9d4dff;
+            --accent-green: #00ff88;
+            --rainbow-gradient: linear-gradient(90deg, #ff0000, #ff8000, #ffff00, #80ff00, #00ff80, #00ffff, #0080ff, #8000ff, #ff00ff);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 240, 255, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(157, 77, 255, 0.05) 0%, transparent 20%);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            padding: 40px;
+            width: 100%;
+            max-width: 700px;
+            text-align: center;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            background: var(--rainbow-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin-bottom: 25px;
+            color: var(--text-secondary);
+        }
+
+        .cta-button {
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-magenta));
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            padding: 15px 40px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 240, 255, 0.3);
+            transition: all 0.3s ease;
+            margin-top: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 240, 255, 0.5);
+        }
+
+        .split-button-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .split-button-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .split-button-left {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 50%;
+            height: 100%;
+        }
+
+        .split-button-right {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 50%;
+            height: 100%;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--card-border);
+            border-radius: 15px;
+            padding: 40px 20px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+        }
+
+        .upload-area.active {
+            border-color: var(--accent-magenta);
+            background: rgba(255, 0, 200, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: var(--accent-cyan);
+        }
+
+        .image-preview {
+            max-width: 250px;
+            max-height: 250px;
+            border-radius: 10px;
+            margin: 20px auto;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            object-fit: cover;
+        }
+
+        .analysis-progress {
+            width: 100%;
+            margin: 30px 0;
+        }
+
+        .progress-bar {
+            height: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--rainbow-gradient);
+            border-radius: 6px;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .progress-text {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            min-height: 1.5em;
+        }
+
+        .progress-subtext {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            min-height: 1.2em;
+        }
+
+        .result-section {
+            /* Remove display: none from here - we'll control visibility with hidden class */
+        }
+
+        .result-title {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .result-lgbtq {
+            color: transparent;
+            background: var(--rainbow-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            animation: rainbowPulse 2s infinite;
+        }
+
+        .result-not-lgbtq {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+        }
+
+        .result-image {
+            max-width: 300px;
+            border-radius: 15px;
+            margin: 20px auto;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .action-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--card-border);
+            border-radius: 50px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            padding: 12px 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 240, 255, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 240, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 240, 255, 0); }
+        }
+
+        .glow {
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px var(--accent-cyan), 0 0 20px var(--accent-cyan); }
+            to { box-shadow: 0 0 10px #fff, 0 0 15px var(--accent-magenta), 0 0 20px var(--accent-magenta), 0 0 25px var(--accent-magenta); }
+        }
+
+        @keyframes rainbowPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .try-again-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--card-border);
+        }
+
+        .try-again-button {
+            background: linear-gradient(90deg, var(--accent-violet), var(--accent-magenta));
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 12px 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(157, 77, 255, 0.3);
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .try-again-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(157, 77, 255, 0.5);
+        }
+
+        .result-details {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .result-details h3 {
+            margin-bottom: 10px;
+            color: var(--accent-cyan);
+        }
+
+        .result-details ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .result-details li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .result-details li:before {
+            content: "•";
+            color: var(--accent-magenta);
+            position: absolute;
+            left: 0;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--accent-cyan);
+            animation: spin 1s ease-in-out infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Form styles */
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+        }
+
+        /* Floating particles */
+        .particles-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--accent-cyan);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 15s infinite linear;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.7;
+            }
+            90% {
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        /* Fun elements */
+        .floating-emoji {
+            position: absolute;
+            font-size: 2rem;
+            animation: floatEmoji 8s infinite ease-in-out;
+            opacity: 0.7;
+            z-index: -1;
+        }
+
+        @keyframes floatEmoji {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(180deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .glass-card {
+                padding: 25px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .action-button {
+                width: 100%;
+                max-width: 250px;
+            }
+            
+            .split-button-container {
+                width: 100%;
+            }
+            
+            .cta-button {
+                width: 100%;
+            }
+        }
+
+        /* Additional laptop-friendly styles */
+        @media (min-width: 1024px) {
+            .container {
+                max-width: 1000px;
+            }
+            
+            .glass-card {
+                padding: 50px;
+            }
+            
+            h1 {
+                font-size: 3.5rem;
+            }
+            
+            h2 {
+                font-size: 1.8rem;
+            }
+            
+            .result-title {
+                font-size: 2.8rem;
+            }
+        }
+
+        /* Center everything vertically and horizontally */
+        body, html {
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating particles background -->
+    <div class="particles-container" id="particlesContainer"></div>
+    
+    <!-- Floating emojis -->
+    <div class="floating-emoji" style="top: 10%; left: 5%;">🌈</div>
+    <div class="floating-emoji" style="top: 20%; right: 10%;">✨</div>
+    <div class="floating-emoji" style="bottom: 30%; left: 15%;">🎉</div>
+    <div class="floating-emoji" style="bottom: 10%; right: 5%;">🌟</div>
+    
+    <div class="container">
+        <div class="glass-card fade-in" id="heroSection">
+            <h1>Spectrum Analyzer</h1>
+            <h2>Upload your photo, let the system scan, and discover your result.</h2>
+            <button class="cta-button" id="beginAnalysis">Begin Analysis</button>
+        </div>
+        
+        <div class="glass-card hidden" id="uploadSection">
+            <h2>Upload Your Photo</h2>
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <p>Drag & drop your image here or click to browse</p>
+                <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                <img id="imagePreview" class="image-preview" alt="Preview">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="userName">Your Name</label>
+                <input type="text" id="userName" class="form-input" placeholder="Enter your name">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="userDOB">Date of Birth</label>
+                <input type="date" id="userDOB" class="form-input">
+            </div>
+            
+            <div class="split-button-container">
+                <button class="cta-button hidden" id="runAnalysis">Start Analysis</button>
+                <div class="split-button-overlay">
+                    <div class="split-button-left" id="startButton"></div>
+                    <div class="split-button-right" id="analysisButton"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="glass-card hidden" id="analysisSection">
+            <h2>Analyzing Your Photo</h2>
+            <div class="analysis-progress">
+                <div class="spinner"></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">Initializing...</div>
+                <div class="progress-subtext" id="progressSubtext">Preparing analysis modules</div>
+            </div>
+        </div>
+        
+        <div class="glass-card hidden" id="resultSection">
+            <h2>Analysis Complete</h2>
+            <div class="result-section hidden" id="resultContent">
+                <div class="result-title" id="resultTitle"></div>
+                <canvas id="resultCanvas" class="result-image"></canvas>
+                
+                <div class="result-details" id="resultDetails">
+                    <!-- Dynamic content will be added here -->
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="action-button" id="downloadCertificate">
+                        <span>📄</span> Download Certificate
+                    </button>
+                    <button class="action-button" id="shareResult">
+                        <span>📤</span> Share Result
+                    </button>
+                </div>
+                
+                <div class="try-again-section">
+                    <button class="try-again-button" id="tryAgain">Try Another Analysis</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const heroSection = document.getElementById('heroSection');
+        const uploadSection = document.getElementById('uploadSection');
+        const analysisSection = document.getElementById('analysisSection');
+        const resultSection = document.getElementById('resultSection');
+        const resultContent = document.getElementById('resultContent');
+        const beginAnalysisBtn = document.getElementById('beginAnalysis');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const userNameInput = document.getElementById('userName');
+        const userDOBInput = document.getElementById('userDOB');
+        const runAnalysisBtn = document.getElementById('runAnalysis');
+        const startButton = document.getElementById('startButton');
+        const analysisButton = document.getElementById('analysisButton');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const progressSubtext = document.getElementById('progressSubtext');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultCanvas = document.getElementById('resultCanvas');
+        const resultDetails = document.getElementById('resultDetails');
+        const tryAgainBtn = document.getElementById('tryAgain');
+        const downloadCertificateBtn = document.getElementById('downloadCertificate');
+        const shareResultBtn = document.getElementById('shareResult');
+        const particlesContainer = document.getElementById('particlesContainer');
+
+        // Analysis counter (stored in localStorage)
+        let analysisCount = parseInt(localStorage.getItem('analysisCount')) || 0;
+        
+        // User data
+        let userData = {
+            name: '',
+            dob: '',
+            photo: null
+        };
+        
+        // Result type (true for LGBTQ+, false for not)
+        let isLGBTQResult = false;
+
+        // Create floating particles
+        function createParticles() {
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                particle.style.left = Math.random() * 100 + 'vw';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+                particle.style.background = i % 3 === 0 ? 'var(--accent-cyan)' : 
+                                          i % 3 === 1 ? 'var(--accent-magenta)' : 'var(--accent-violet)';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Event Listeners
+        beginAnalysisBtn.addEventListener('click', showUploadSection);
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+        startButton.addEventListener('click', () => startAnalysis(true));
+        analysisButton.addEventListener('click', () => startAnalysis(false));
+        tryAgainBtn.addEventListener('click', resetApp);
+        downloadCertificateBtn.addEventListener('click', downloadCertificate);
+        shareResultBtn.addEventListener('click', shareResult);
+
+        // Initialize particles
+        createParticles();
+
+        // Functions
+        function showUploadSection() {
+            heroSection.classList.add('hidden');
+            uploadSection.classList.remove('hidden');
+            uploadSection.classList.add('fade-in');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadArea.classList.add('active');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadArea.classList.remove('active');
+            
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            if (e.target.files && e.target.files[0]) {
+                handleFile(e.target.files[0]);
+            }
+        }
+
+        function handleFile(file) {
+            if (!file.type.match('image.*')) {
+                alert('Please select an image file.');
+                return;
+            }
+            
+            userData.photo = file;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+                runAnalysisBtn.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function startAnalysis(isLGBTQ) {
+            // Validate inputs
+            if (!userData.photo) {
+                alert('Please upload a photo first.');
+                return;
+            }
+            
+            if (!userNameInput.value.trim()) {
+                alert('Please enter your name.');
+                return;
+            }
+            
+            if (!userDOBInput.value) {
+                alert('Please enter your date of birth.');
+                return;
+            }
+            
+            // Store user data and result type
+            userData.name = userNameInput.value.trim();
+            userData.dob = userDOBInput.value;
+            isLGBTQResult = isLGBTQ;
+            
+            uploadSection.classList.add('hidden');
+            analysisSection.classList.remove('hidden');
+            analysisSection.classList.add('fade-in');
+            
+            // Increment analysis count
+            analysisCount++;
+            localStorage.setItem('analysisCount', analysisCount.toString());
+            
+            // Start fake analysis progress
+            simulateAnalysis();
+        }
+
+        function simulateAnalysis() {
+            const steps = [
+                { text: "Scanning image...", subtext: "Detecting facial features", progress: 20 },
+                { text: "Detecting energy patterns...", subtext: "Analyzing aura frequencies", progress: 40 },
+                { text: "Cross-referencing spectrum...", subtext: "Comparing with database", progress: 60 },
+                { text: "Processing results...", subtext: "Finalizing analysis", progress: 80 },
+                { text: "Analysis complete!", subtext: "Generating report", progress: 100 }
+            ];
+            
+            const funnyLines = [
+                "Detecting rainbows in your aura...",
+                "Checking for glitter residue...",
+                "Analyzing your taste in music...",
+                "Scanning for pride flag colors...",
+                "Measuring your fabulousness level...",
+                "Calculating your queer potential...",
+                "Assessing your knowledge of LGBTQ+ history...",
+                "Checking if you own a rainbow accessory...",
+                "Analyzing your Netflix watch history...",
+                "Measuring your allyship energy...",
+                "Scanning for knowledge of queer terminology...",
+                "Checking if you've ever been to a Pride parade...",
+                "Analyzing your preferred pronouns...",
+                "Detecting if you know what 'cishet' means...",
+                "Measuring your ability to slay...",
+                "Scanning for hidden rainbow potential...",
+                "Analyzing your dance moves...",
+                "Checking your knowledge of RuPaul's Drag Race...",
+                "Measuring your tolerance for bad puns..."
+            ];
+            
+            let currentStep = 0;
+            
+            const interval = setInterval(() => {
+                if (currentStep < steps.length) {
+                    const step = steps[currentStep];
+                    progressText.textContent = step.text;
+                    progressSubtext.textContent = step.subtext;
+                    progressFill.style.width = `${step.progress}%`;
+                    
+                    // Random funny line sometimes
+                    if (Math.random() > 0.7) {
+                        progressSubtext.textContent = funnyLines[Math.floor(Math.random() * funnyLines.length)];
+                    }
+                    
+                    currentStep++;
+                } else {
+                    clearInterval(interval);
+                    showResult();
+                }
+            }, 1500);
+        }
+
+        function showResult() {
+            analysisSection.classList.add('hidden');
+            resultSection.classList.remove('hidden');
+            resultSection.classList.add('fade-in');
+            
+            // Show the result content immediately
+            resultContent.classList.remove('hidden');
+            
+            // Generate random percentage
+            const lgbtqPercentage = isLGBTQResult 
+                ? Math.floor(Math.random() * 15) + 85  // 85-99%
+                : Math.floor(Math.random() * 20) + 10; // 10-29%
+            
+            if (isLGBTQResult) {
+                resultTitle.innerHTML = '🌈 <span class="result-lgbtq">LGBTQ+ List Member Detected!</span>';
+                
+                // Create confetti effect
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#ff0000', '#ff8000', '#ffff00', '#80ff00', '#00ff80', '#00ffff', '#0080ff', '#8000ff', '#ff00ff']
+                });
+                
+                // Additional confetti bursts
+                setTimeout(() => confetti({ particleCount: 50, spread: 100, origin: { x: 0.2, y: 0.6 } }), 500);
+                setTimeout(() => confetti({ particleCount: 50, spread: 100, origin: { x: 0.8, y: 0.6 } }), 1000);
+                
+                // Add LGBTQ+ specific details
+                resultDetails.innerHTML = `
+                    <h3>🌈 Analysis Details</h3>
+                    <ul>
+                        <li>LGBTQ+ Match: ${lgbtqPercentage}%</li>
+                        <li>Rainbow aura detected with 98% confidence</li>
+                        <li>High levels of fabulousness measured</li>
+                        <li>Positive alignment with LGBTQ+ spectrum confirmed</li>
+                        <li>Inclusive energy signature identified</li>
+                        <li>Welcome to the community!</li>
+                    </ul>
+                `;
+            } else {
+                resultTitle.innerHTML = '🙂 <span class="result-not-lgbtq">Not in the LGBTQ+ List</span>';
+                
+                // Add non-LGBTQ details
+                resultDetails.innerHTML = `
+                    <h3>🔍 Analysis Details</h3>
+                    <ul>
+                        <li>LGBTQ+ Match: ${lgbtqPercentage}%</li>
+                        <li>Standard energy signature detected</li>
+                        <li>No specific LGBTQ+ alignment identified</li>
+                        <li>This is a neutral result - everyone is welcome!</li>
+                        <li>Try again for a different outcome</li>
+                    </ul>
+                `;
+            }
+            
+            // Draw result on canvas
+            const ctx = resultCanvas.getContext('2d');
+            resultCanvas.width = 800;
+            resultCanvas.height = 600;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, resultCanvas.width, resultCanvas.height);
+            
+            // Draw background based on result
+            if (isLGBTQResult) {
+                // Rainbow gradient background for LGBTQ+ result
+                const gradient = ctx.createLinearGradient(0, 0, resultCanvas.width, resultCanvas.height);
+                gradient.addColorStop(0, 'rgba(255, 0, 0, 0.1)');
+                gradient.addColorStop(0.125, 'rgba(255, 128, 0, 0.1)');
+                gradient.addColorStop(0.25, 'rgba(255, 255, 0, 0.1)');
+                gradient.addColorStop(0.375, 'rgba(128, 255, 0, 0.1)');
+                gradient.addColorStop(0.5, 'rgba(0, 255, 128, 0.1)');
+                gradient.addColorStop(0.625, 'rgba(0, 255, 255, 0.1)');
+                gradient.addColorStop(0.75, 'rgba(0, 128, 255, 0.1)');
+                gradient.addColorStop(0.875, 'rgba(128, 0, 255, 0.1)');
+                gradient.addColorStop(1, 'rgba(255, 0, 255, 0.1)');
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, resultCanvas.width, resultCanvas.height);
+            } else {
+                // Standard gradient background for non-LGBTQ result
+                const gradient = ctx.createLinearGradient(0, 0, resultCanvas.width, resultCanvas.height);
+                gradient.addColorStop(0, 'rgba(0, 240, 255, 0.2)');
+                gradient.addColorStop(1, 'rgba(157, 77, 255, 0.2)');
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, resultCanvas.width, resultCanvas.height);
+            }
+            
+            // Draw border
+            ctx.strokeStyle = isLGBTQResult ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(10, 10, resultCanvas.width - 20, resultCanvas.height - 20);
+            
+            // Draw user photo if available
+            if (imagePreview.src) {
+                const img = new Image();
+                img.onload = function() {
+                    // Draw image in a circular frame
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(resultCanvas.width / 2, 150, 80, 0, Math.PI * 2);
+                    ctx.closePath();
+                    ctx.clip();
+                    
+                    // Calculate dimensions to maintain aspect ratio
+                    const aspectRatio = img.width / img.height;
+                    let drawWidth, drawHeight;
+                    
+                    if (aspectRatio > 1) {
+                        drawWidth = 160;
+                        drawHeight = 160 / aspectRatio;
+                    } else {
+                        drawHeight = 160;
+                        drawWidth = 160 * aspectRatio;
+                    }
+                    
+                    ctx.drawImage(img, resultCanvas.width / 2 - drawWidth/2, 150 - drawHeight/2, drawWidth, drawHeight);
+                    ctx.restore();
+                    
+                    // Draw the rest of the certificate
+                    drawCertificateText(ctx, isLGBTQResult, lgbtqPercentage);
+                };
+                img.src = imagePreview.src;
+            } else {
+                drawCertificateText(ctx, isLGBTQResult, lgbtqPercentage);
+            }
+        }
+
+        function drawCertificateText(ctx, isLGBTQ, lgbtqPercentage) {
+            // Draw title
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 36px Poppins';
+            ctx.textAlign = 'center';
+            ctx.fillText('SPECTRUM ANALYSIS CERTIFICATE', resultCanvas.width / 2, 280);
+            
+            // Draw user details
+            ctx.font = '22px Poppins';
+            ctx.fillText(`Name: ${userData.name}`, resultCanvas.width / 2, 330);
+            
+            // Format date of birth
+            const dob = new Date(userData.dob);
+            const formattedDOB = dob.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            ctx.fillText(`Date of Birth: ${formattedDOB}`, resultCanvas.width / 2, 370);
+            
+            // Draw result
+            ctx.font = 'bold 28px Poppins';
+            ctx.fillText(isLGBTQ ? 'LGBTQ+ LIST MEMBER' : 'NOT IN LGBTQ+ LIST', resultCanvas.width / 2, 430);
+            
+            ctx.font = '24px Poppins';
+            ctx.fillText(`Match Percentage: ${lgbtqPercentage}%`, resultCanvas.width / 2, 470);
+            
+            ctx.font = '18px Poppins';
+            ctx.fillText(`Analysis #${analysisCount}`, resultCanvas.width / 2, 520);
+            ctx.fillText(new Date().toLocaleDateString(), resultCanvas.width / 2, 550);
+            
+            // Draw rainbow if LGBTQ+
+            if (isLGBTQ) {
+                const rainbowColors = ['#ff0000', '#ff8000', '#ffff00', '#80ff00', '#00ff80', '#00ffff', '#0080ff', '#8000ff'];
+                const barHeight = 10;
+                const startY = 570;
+                
+                for (let i = 0; i < rainbowColors.length; i++) {
+                    ctx.fillStyle = rainbowColors[i];
+                    ctx.fillRect(100, startY + i * barHeight, resultCanvas.width - 200, barHeight);
+                }
+            }
+        }
+
+        function resetApp() {
+            resultSection.classList.add('hidden');
+            uploadSection.classList.remove('hidden');
+            uploadSection.classList.add('fade-in');
+            
+            // Reset upload area
+            imagePreview.style.display = 'none';
+            runAnalysisBtn.classList.add('hidden');
+            fileInput.value = '';
+            userNameInput.value = '';
+            userDOBInput.value = '';
+            userData = { name: '', dob: '', photo: null };
+            
+            // Hide result content for next time
+            resultContent.classList.add('hidden');
+        }
+
+        function downloadCertificate() {
+            const link = document.createElement('a');
+            link.download = `spectrum-analysis-${analysisCount}.png`;
+            link.href = resultCanvas.toDataURL();
+            link.click();
+        }
+
+        function shareResult() {
+            // Create a temporary canvas for sharing
+            const shareCanvas = document.createElement('canvas');
+            shareCanvas.width = 1200; // Higher resolution for sharing
+            shareCanvas.height = 630; // Standard social media aspect ratio
+            
+            const ctx = shareCanvas.getContext('2d');
+            
+            // Draw background based on result
+            if (isLGBTQResult) {
+                // Rainbow gradient background for LGBTQ+ result
+                const gradient = ctx.createLinearGradient(0, 0, shareCanvas.width, shareCanvas.height);
+                gradient.addColorStop(0, 'rgba(255, 0, 0, 0.3)');
+                gradient.addColorStop(0.125, 'rgba(255, 128, 0, 0.3)');
+                gradient.addColorStop(0.25, 'rgba(255, 255, 0, 0.3)');
+                gradient.addColorStop(0.375, 'rgba(128, 255, 0, 0.3)');
+                gradient.addColorStop(0.5, 'rgba(0, 255, 128, 0.3)');
+                gradient.addColorStop(0.625, 'rgba(0, 255, 255, 0.3)');
+                gradient.addColorStop(0.75, 'rgba(0, 128, 255, 0.3)');
+                gradient.addColorStop(0.875, 'rgba(128, 0, 255, 0.3)');
+                gradient.addColorStop(1, 'rgba(255, 0, 255, 0.3)');
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, shareCanvas.width, shareCanvas.height);
+            } else {
+                // Standard gradient background for non-LGBTQ result
+                const gradient = ctx.createLinearGradient(0, 0, shareCanvas.width, shareCanvas.height);
+                gradient.addColorStop(0, 'rgba(0, 240, 255, 0.4)');
+                gradient.addColorStop(1, 'rgba(157, 77, 255, 0.4)');
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, shareCanvas.width, shareCanvas.height);
+            }
+            
+            // Draw border
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 5;
+            ctx.strokeRect(20, 20, shareCanvas.width - 40, shareCanvas.height - 40);
+            
+            // Draw title
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 60px Poppins';
+            ctx.textAlign = 'center';
+            ctx.fillText('SPECTRUM ANALYZER RESULT', shareCanvas.width / 2, 150);
+            
+            // Draw result
+            ctx.font = 'bold 48px Poppins';
+            ctx.fillText(isLGBTQResult ? '🌈 LGBTQ+ LIST MEMBER' : '🙂 NOT IN LGBTQ+ LIST', shareCanvas.width / 2, 300);
+            
+            // Draw user info
+            ctx.font = '36px Poppins';
+            ctx.fillText(`${userData.name}`, shareCanvas.width / 2, 400);
+            
+            // Draw analysis info
+            ctx.font = '28px Poppins';
+            ctx.fillText(`Analysis #${analysisCount} • ${new Date().toLocaleDateString()}`, shareCanvas.width / 2, 500);
+            
+            // Draw website info
+            ctx.font = '24px Poppins';
+            ctx.fillText('spectrum-analyzer.fun', shareCanvas.width / 2, 580);
+            
+            // Convert to data URL and share
+            const dataURL = shareCanvas.toDataURL('image/png');
+            
+            if (navigator.share) {
+                // Convert data URL to blob for sharing
+                fetch(dataURL)
+                    .then(res => res.blob())
+                    .then(blob => {
+                        const file = new File([blob], 'spectrum-analysis-result.png', { type: 'image/png' });
+                        navigator.share({
+                            title: 'My Spectrum Analysis Result',
+                            text: isLGBTQResult 
+                                ? "🌈 I'm officially a LGBTQ+ List Member according to the Spectrum Analyzer!" 
+                                : "🙂 The Spectrum Analyzer says I'm not in the LGBTQ+ List.",
+                            files: [file]
+                        });
+                    });
+            } else {
+                // Fallback: download the image
+                const link = document.createElement('a');
+                link.download = 'spectrum-analysis-share.png';
+                link.href = dataURL;
+                link.click();
+                alert('Image downloaded! You can now share it manually.');
+            }
+        }
+    </script>
+</body>
+</html>
